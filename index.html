@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Investigation Board V3</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div id="toolbar">
+
+<button onclick="createTextNode()">📝</button>
+<button onclick="createImageNode()">🖼</button>
+<button onclick="connectMode()">🔗</button>
+<button onclick="deleteNode()">❌</button>
+<button onclick="duplicateNode()">📄</button>
+<button onclick="toggleGrid()">🔲</button>
+<button onclick="zoomIn()">➕</button>
+<button onclick="zoomOut()">➖</button>
+<button onclick="changeBoardColor()">🎨</button>
+<button onclick="exportBoard()">📸</button>
+<button onclick="saveBoard()">💾</button>
+
+</div>
+
+<div id="boardContainer">
+
+<svg id="connections"></svg>
+
+<div id="board"></div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
