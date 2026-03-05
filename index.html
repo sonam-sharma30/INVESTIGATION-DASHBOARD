@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Investigation Board V2</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:#0e0e0e;
+color:white;
+overflow:hidden;
+}
+
+#toolbar{
+position:fixed;
+top:0;
+left:0;
+height:60px;
+width:100%;
+background:#1a1a1a;
+display:flex;
+align-items:center;
+gap:8px;
+padding:5px;
+z-index:1000;
+}
+
+button{
+background:#2b2b2b;
+border:none;
+color:white;
+padding:6px 10px;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#444;
+}
+
+#board{
+position:absolute;
+top:60px;
+left:0;
+width:8000px;
+height:8000px;
+background:white;
+}
+
+.node{
+position:absolute;
+min-width:140px;
+min-height:80px;
+border-radius:8px;
+padding:6px;
+border:2px solid #333;
+background:white;
+color:black;
+cursor:move;
+}
+
+.node img{
+max-width:200px;
+max-height:150px;
+}
+
+svg{
+position:absolute;
+top:60px;
+left:0;
+pointer-events:none;
+}
+
+.grid{
+background-image:
+linear-gradient(#ddd 1px, transparent 1px),
+linear-gradient(90deg, #ddd 1px, transparent 1px);
+background-size:40px 40px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="toolbar">
+
+<button onclick="newCase()">📁 New Case</button>
+<button onclick="addText()">📝 Text</button>
+<button onclick="addImage()">🖼 Image</button>
+<button onclick="connectMode()">🔗 Connect</button>
+<button onclick="deleteNode()">❌ Delete</button>
+<button onclick="toggleGrid()">🔲 Grid</button>
+<button onclick="changeBoardColor()">🎨 Board</button>
+<button onclick="zoomIn()">🔍 +</button>
+<button onclick="zoomOut()">🔍 -</button>
+<button onclick="saveBoard()">💾 Save</button>
+<button onclick="share()">🌐 Share</button>
+
+</div>
+
+<svg id="lines" width="8000" height="8000"></svg>
+
+<div id="board"></div>
+
+<script>
+
+let board=document.getElementById("board")
+let lines=document.getElementById("lines")
+
+let selected=null
+let connectStart=null
+let zoom=1
+
+function newCase(){
+
+if(confirm("Clear current board?")){
+
+board.innerHTML=""
+lines.innerHTML=""
+localStorage.removeItem("board")
+
+}
+
+}
+
+function addText(){
+
+let text=prompt("Enter evidence text")
+
+if(!text) return
+
+let node=createNode()
+
+node.innerText=text
+
+}
+
+function addImage(){
+
+let url=prompt("Image URL")
+
+if(!url) return
+
+let node=createNode()
+
+let img=document.createElement("img")
+img.src=url
+
+node.appendChild(img)
+
+}
+
+function createNode(){
+
+let node=document.createElement("div")
+
+node.className="node"
+node.style.left="500px"
+node.style.top="500px"
+
+node.dataset.id=Math.random()
+
+board.appendChild(node)
+
+drag(node)
+
+node.onclick=function(e){
+
+e.stopPropagation()
+
+selected=node
+
+if(connectStart==null){
+
+connectStart=node
+
+}else{
+
+createLine(connectStart,node)
+
+connectStart=null
+
+}
+
+}
+
+return node
+
+}
+
+function drag(el){
+
+let offsetX,offsetY
+
+el.onmousedown=function(e){
+
+offsetX=e.offsetX
+offsetY=e.offsetY
+
+document.onmousemove=function(e){
+
+el.style.left=(e.pageX-offsetX)+"px"
+el.style.top=(e.pageY-offsetY-60)+"px"
+
+updateLines()
+
+}
+
+document.onmouseup=function(){
+
+document.onmousemove=null
+
+}
+
+}
+
+}
+
+function createLine(a,b){
+
+let line=document.createElementNS("http://www.w3.org/2000/svg","line")
+
+line.setAttribute("stroke","red")
+line.setAttribute("stroke-width","3")
+
+lines.appendChild(line)
+
+line.dataset.a=a.dataset.id
+line.dataset.b=b.dataset.id
+
+animateLine(line)
+
+updateLines()
+
+}
+
+function animateLine(line){
+
+let dash=0
+
+setInterval(()=>{
+
+dash+=2
+
+line.style.strokeDasharray="6"
+line.style.strokeDashoffset=dash
+
+},50)
+
+}
+
+function updateLines(){
+
+let all=lines.querySelectorAll("line")
+
+all.forEach(line=>{
+
+let a=document.querySelector(`[data-id="${line.dataset.a}"]`)
+let b=document.querySelector(`[data-id="${line.dataset.b}"]`)
+
+if(!a||!b) return
+
+let ax=a.offsetLeft+a.offsetWidth/2
+let ay=a.offsetTop+a.offsetHeight/2
+
+let bx=b.offsetLeft+b.offsetWidth/2
+let by=b.offsetTop+b.offsetHeight/2
+
+line.setAttribute("x1",ax)
+line.setAttribute("y1",ay)
+
+line.setAttribute("x2",bx)
+line.setAttribute("y2",by)
+
+})
+
+}
+
+function connectMode(){
+
+alert("Click first node then second node")
+
+connectStart=null
+
+}
+
+function deleteNode(){
+
+if(selected){
+
+selected.remove()
+
+updateLines()
+
+}
+
+}
+
+function toggleGrid(){
+
+board.classList.toggle("grid")
+
+}
+
+function changeBoardColor(){
+
+let c=prompt("Enter board color")
+
+board.style.background=c
+
+}
+
+function zoomIn(){
+
+zoom+=0.1
+board.style.transform="scale("+zoom+")"
+
+}
+
+function zoomOut(){
+
+zoom-=0.1
+board.style.transform="scale("+zoom+")"
+
+}
+
+function saveBoard(){
+
+localStorage.setItem("board",board.innerHTML)
+
+alert("Saved")
+
+}
+
+function share(){
+
+let data=btoa(board.innerHTML)
+
+let link=location.origin+location.pathname+"?view="+data
+
+prompt("Share link",link)
+
+}
+
+window.onload=function(){
+
+let params=new URLSearchParams(location.search)
+
+if(params.get("view")){
+
+board.innerHTML=atob(params.get("view"))
+
+}else{
+
+let saved=localStorage.getItem("board")
+
+if(saved) board.innerHTML=saved
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
